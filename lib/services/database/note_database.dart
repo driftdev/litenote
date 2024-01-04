@@ -21,6 +21,7 @@ class NoteDatabase extends ChangeNotifier {
     final newNote = Note()..content = content;
 
     await isar.writeTxn(()  => isar.notes.put(newNote));
+    getAll();
   }
 
   Future<void> update(int id, String content) async {
@@ -29,10 +30,12 @@ class NoteDatabase extends ChangeNotifier {
       existingNote.content = content;
       await isar.writeTxn(()  => isar.notes.put(existingNote));
     }
+    getAll();
   }
 
   Future<void> delete(int id) async {
     await isar.writeTxn(()  => isar.notes.delete(id));
+    getAll();
   }
 
   Future<void> getAll() async {
