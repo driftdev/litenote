@@ -1,9 +1,10 @@
+import 'package:flutter/cupertino.dart';
 import 'package:isar/isar.dart';
 import 'package:path_provider/path_provider.dart';
 
 import '../../models/note.dart';
 
-class NoteDatabase {
+class NoteDatabase extends ChangeNotifier {
   static late Isar isar;
 
   static Future<void> init() async {
@@ -14,7 +15,7 @@ class NoteDatabase {
     );
   }
 
-  final List<Note> notes = [];
+  final List<Note> currentNotes = [];
 
   Future<void> create(String content) async {
     final newNote = Note()..content = content;
@@ -34,8 +35,10 @@ class NoteDatabase {
     await isar.writeTxn(()  => isar.notes.delete(id));
   }
 
-  Future<List<Note>> getAll() async {
-    final notes = await isar.notes.where().findAll();
-    return notes;
+  Future<void> getAll() async {
+    List<Note> notes = await isar.notes.where().findAll();
+    currentNotes.clear();
+    currentNotes.addAll(notes);
+    notifyListeners();
   }
 }
