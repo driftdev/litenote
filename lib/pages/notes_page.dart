@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:notelite/services/database/note_database.dart';
 import 'package:provider/provider.dart';
 
+import '../components/note_tile.dart';
+import '../components/shared/drawer.dart';
 import '../models/note.dart';
 
 class NotesPage extends StatefulWidget {
@@ -12,7 +15,6 @@ class NotesPage extends StatefulWidget {
 }
 
 class _NotesPageState extends State<NotesPage> {
-
   final contentController = TextEditingController();
 
   @override
@@ -21,52 +23,74 @@ class _NotesPageState extends State<NotesPage> {
     readNotes();
   }
 
-
   void createNote() {
     showDialog(
-        context: context,
-        builder: (context) => AlertDialog(
-          content: TextField(
-            controller: contentController,
-          ),
-          actions: [
-            MaterialButton(
-              onPressed: () {
-                context.read<NoteDatabase>().create(contentController.text);
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: Theme.of(context).colorScheme.background,
+        content: TextField(
+          controller: contentController,
+        ),
+        actions: [
+          MaterialButton(
+            onPressed: () {
+                String text = contentController.text.trim();
+                if (text.isEmpty) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Please enter some content'),
+                    ),
+                  );
+                  return;
+                }
+                context.read<NoteDatabase>().create(text);
 
                 contentController.clear();
 
                 Navigator.pop(context);
-              },
-              child: const Text('Create 🌠'),
-            ),
-          ],
-        ),
+            },
+            child: const Text('Create'),
+          ),
+        ],
+      ),
     );
   }
 
   void updateNote(Note note) {
     contentController.text = note.content;
     showDialog(
-        context: context,
-        builder: (context) => AlertDialog(
-          title: const Text('Update ✏️'),
-          content: TextField(
-            controller: contentController,
-          ),
-          actions: [
-            MaterialButton(
-              onPressed: () {
-                context.read<NoteDatabase>().update(note.id, contentController.text);
-
-                contentController.clear();
-
-                Navigator.pop(context);
-              },
-              child: const Text('Update ✏️'),
-            )
-          ],
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: Theme.of(context).colorScheme.background,
+        title: const Text('Update'),
+        content: TextField(
+          controller: contentController,
         ),
+        actions: [
+          MaterialButton(
+            onPressed: () {
+              String text = contentController.text.trim();
+              if (text.isEmpty) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('Please enter some content'),
+                  ),
+                );
+                return;
+              }
+
+              context
+                  .read<NoteDatabase>()
+                  .update(note.id, contentController.text);
+
+              contentController.clear();
+
+              Navigator.pop(context);
+            },
+            child: const Text('Update'),
+          )
+        ],
+      ),
     );
   }
 
@@ -86,35 +110,47 @@ class _NotesPageState extends State<NotesPage> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Lite Note 💫'),
+        elevation: 0,
+        backgroundColor: Colors.transparent,
       ),
+      backgroundColor: Theme.of(context).colorScheme.background,
       floatingActionButton: FloatingActionButton(
         onPressed: createNote,
-        child: const Icon(Icons.add),
+        backgroundColor: Theme.of(context).colorScheme.secondary,
+        child: Icon(
+          Icons.add,
+          color: Theme.of(context).colorScheme.inversePrimary,
+        ),
       ),
-      body: ListView.builder(
-        itemCount: currentNotes.length,
-        itemBuilder: (context, index) {
-          final note = currentNotes[index];
-
-          return ListTile(
-            title: Text(note.content),
-            trailing: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                IconButton(
-                  onPressed: () => updateNote(note),
-                  icon: const Icon(Icons.edit),
-                ),
-
-                IconButton(
-                  onPressed: () => deleteNote(note.id),
-                  icon: const Icon(Icons.delete),
-                )
-              ]
+      drawer: const AppDrawer(),
+      body: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
+            padding: const EdgeInsets.only(left: 25.0),
+            child: Text(
+              "Lite Note",
+              style: GoogleFonts.dmSerifText(
+                fontSize: 40,
+                color: Theme.of(context).colorScheme.inversePrimary,
+              ),
             ),
-          );
-        },
+          ),
+          Expanded(
+            child: ListView.builder(
+              itemCount: currentNotes.length,
+              itemBuilder: (context, index) {
+                final note = currentNotes[index];
+
+                return NoteTile(
+                  content: note.content,
+                  onEditPressed: () => updateNote(note),
+                  onDeletePressed: () => deleteNote(note.id),
+                );
+              },
+            ),
+          ),
+        ],
       ),
     );
   }
