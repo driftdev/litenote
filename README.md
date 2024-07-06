@@ -1,4 +1,4 @@
-# notelite
+# NoteLite
 
 A simple easy to use no non sense notes app to take quick notes
 
